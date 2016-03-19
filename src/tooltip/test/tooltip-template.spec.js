@@ -3,21 +3,23 @@ describe('tooltip template', function() {
       elmBody,
       scope,
       elmScope,
-      tooltipScope;
+      tooltipScope,
+      $document;
 
   // load the popover code
   beforeEach(module('ui.bootstrap.tooltip'));
 
   // load the template
-  beforeEach(module('template/tooltip/tooltip-template-popup.html'));
+  beforeEach(module('uib/template/tooltip/tooltip-template-popup.html'));
 
   beforeEach(inject(function($templateCache) {
     $templateCache.put('myUrl', [200, '<span>{{ myTemplateText }}</span>', {}]);
   }));
 
-  beforeEach(inject(function($rootScope, $compile) {
+  beforeEach(inject(function($rootScope, $compile, _$document_) {
+    $document = _$document_;
     elmBody = angular.element(
-      '<div><span tooltip-template="templateUrl">Selector Text</span></div>'
+      '<div><span uib-tooltip-template="templateUrl">Selector Text</span></div>'
     );
 
     scope = $rootScope;
@@ -30,10 +32,13 @@ describe('tooltip template', function() {
     tooltipScope = elmScope.$$childTail;
   }));
 
-  function trigger(element, evt) {
-    evt = new Event(evt);
+  afterEach(function() {
+    $document.off('keypress');
+  });
 
-    element[0].dispatchEvent(evt);
+  function trigger(element, evt) {
+    element.trigger(evt);
+    element.scope().$$childTail.$digest();
   }
 
   it('should open on mouseenter', inject(function() {
@@ -55,10 +60,10 @@ describe('tooltip template', function() {
 
   it('should show updated text', inject(function() {
     scope.myTemplateText = 'some text';
-    scope.$digest();
 
     trigger(elm, 'mouseenter');
     expect(tooltipScope.isOpen).toBe(true);
+    scope.$digest();
 
     expect(elmBody.children().eq(1).text().trim()).toBe('some text');
 

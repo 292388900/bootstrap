@@ -2,7 +2,7 @@ describe('uib-alert', function() {
   var element, scope, $compile, $templateCache, $timeout;
 
   beforeEach(module('ui.bootstrap.alert'));
-  beforeEach(module('template/alert/alert.html'));
+  beforeEach(module('uib/template/alert/alert.html'));
 
   beforeEach(inject(function($rootScope, _$compile_, _$templateCache_, _$timeout_) {
     scope = $rootScope;
@@ -39,7 +39,7 @@ describe('uib-alert', function() {
   }
 
   it('should expose the controller to the view', function() {
-    $templateCache.put('template/alert/alert.html', '<div>{{alert.text}}</div>');
+    $templateCache.put('uib/template/alert/alert.html', '<div>{{alert.text}}</div>');
 
     element = $compile('<uib-alert></uib-alert>')(scope);
     scope.$digest();
@@ -136,37 +136,17 @@ describe('uib-alert', function() {
     $timeout.flush();
     expect(scope.removeAlert).toHaveBeenCalled();
   });
-});
 
-/* Deprecation tests below */
+  it('should not close immediately with a dynamic dismiss-on-timeout', function() {
+    scope.removeAlert = jasmine.createSpy();
+    scope.dismissTime = 500;
+    $compile('<uib-alert close="removeAlert()" dismiss-on-timeout="{{dismissTime}}">Default alert!</uib-alert>')(scope);
+    scope.$digest();
 
-describe('alert deprecation', function() {
-  beforeEach(module('ui.bootstrap.alert'));
-  beforeEach(module('template/alert/alert.html'));
+    $timeout.flush(100);
+    expect(scope.removeAlert).not.toHaveBeenCalled();
 
-  it('should suppress warning', function() {
-    module(function($provide) {
-      $provide.value('$alertSuppressWarning', true);
-    });
-
-    inject(function($compile, $log, $rootScope) {
-      spyOn($log, 'warn');
-
-      var element = '<alert></alert>';
-      element = $compile(element)($rootScope);
-      $rootScope.$digest();
-      expect($log.warn.calls.count()).toBe(0);
-    });
+    $timeout.flush(500);
+    expect(scope.removeAlert).toHaveBeenCalled();
   });
-
-  it('should give warning by default', inject(function($compile, $log, $rootScope) {
-    spyOn($log, 'warn');
-
-    var element = '<alert></alert>';
-    element = $compile(element)($rootScope);
-    $rootScope.$digest();
-
-    expect($log.warn.calls.count()).toBe(1);
-    expect($log.warn.calls.argsFor(0)).toEqual(['alert is now deprecated. Use uib-alert instead.']);
-  }));
 });
